@@ -19,6 +19,14 @@ class RandomApiApplicationTests {
     @Test
     void contextLoads() {
         // verifies the application context starts successfully
+    @Test
+    void rootShouldServeIndexHtml() {
+        ResponseEntity<String> response = restTemplate.getForEntity("/", String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.TEXT_HTML);
+        assertThat(response.getBody()).contains("Get Random Number");
+    }
+
     }
 
     @Test

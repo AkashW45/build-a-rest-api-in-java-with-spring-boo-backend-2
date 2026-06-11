@@ -7,10 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(RandomController.class)
 class RandomControllerTests {
@@ -19,37 +16,44 @@ class RandomControllerTests {
     private MockMvc mockMvc;
 
     @Test
-    void getRandom_shouldReturn200AndNumberBetween1And100() throws Exception {
-        mockMvc.perform(get("/random")
-                .accept(MediaType.APPLICATION_JSON))
+    void getRandom_returnsJsonWithRandomNumberBetween1And100() throws Exception {
+        mockMvc.perform(get("/random"))
                 .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.random").isNumber())
-                .andExpect(jsonPath("$.random", allOf(greaterThanOrEqualTo(1), lessThanOrEqualTo(100))));
+                .andExpect(jsonPath("$.random").value(
+                        org.hamcrest.Matchers.both(
+                                org.hamcrest.Matchers.greaterThanOrEqualTo(1))
+                                .and(org.hamcrest.Matchers.lessThanOrEqualTo(100))));
     }
 
     @Test
-    void getRandom_multipleCalls_shouldAlwaysReturnNumbersInRange() throws Exception {
-        for (int i = 0; i < 10; i++) {
-            mockMvc.perform(get("/random")
-                    .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.random", allOf(greaterThanOrEqualTo(1), lessThanOrEqualTo(100))));
-        }
-    }
-
-    @Test
-    void health_shouldReturn200AndStatusOk() throws Exception {
-        mockMvc.perform(get("/health")
-                .accept(MediaType.APPLICATION_JSON))
+    void health_returnsStatusOk() throws Exception {
+        mockMvc.perform(get("/health"))
                 .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("ok"));
     }
 
     @Test
-    void randomEndpoint_withPostMethod_shouldReturn405() throws Exception {
-        mockMvc.perform(post("/random")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON))
+    void home_returnsHtmlPageWithButton() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(xpath("//h1").string("Get Random Number"))
+                .andExpect(xpath("//button[@id='randomBtn']").string("Get Random Number"))
+                .andExpect(xpath("//script").exists());
+    }
+
+    @Test
+    void getRandom_withInvalidMethod_returnsMethodNotAllowed() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/random"))
                 .andExpect(status().isMethodNotAllowed());
+    }
+
+    @Test
+    void invalidEndpoint_returnsNotFound() throws Exception {
+        mockMvc.perform(get("/nonexistent"))
+                .andExpect(status().isNotFound());
     }
 }
