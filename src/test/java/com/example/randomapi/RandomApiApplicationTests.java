@@ -41,11 +41,20 @@ class RandomApiApplicationTests {
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
     }
 
-    @Test
-    void randomEndpointMultipleCallsShouldReturnNumbersInRange() {
-        for (int i = 0; i < 10; i++) {
-            Integer number = restTemplate.getForObject("/random", Integer.class);
-            assertThat(number).isBetween(1, 100);
+        @Test
+        void randomEndpointMultipleCallsShouldReturnNumbersInRange() {
+            for (int i = 0; i < 10; i++) {
+                Integer number = restTemplate.getForObject("/random", Integer.class);
+                assertThat(number).isBetween(1, 100);
+            }
         }
+    
+        @Test
+        void rootShouldServeIndexHtml() {
+            ResponseEntity<String> response = restTemplate.getForEntity("/", String.class);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.TEXT_HTML);
+            assertThat(response.getBody()).contains("Get Random Number");
+        }
+    
     }
-}
